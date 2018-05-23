@@ -47,7 +47,7 @@
     <DefineConstants>$(DefineConstants);iOS</DefineConstants>
     <NoWarn>$(NoWarn);CS8002</NoWarn>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <!-- This None is here so the conditionally included files show up in the Solution Explorer -->
     <None Include="**\*.cs;**\*.xml;**\*.axml" Exclude="obj\**\*.*;bin\**\*.*" />
@@ -57,6 +57,7 @@
     <None Remove="Cache\MsalAccessTokenCacheKey.cs" />
     <None Remove="Cache\MsalIdTokenCacheKey.cs" />
     <None Remove="Cache\MsalRefreshTokenCacheKey.cs" />
+    <None Remove="Platforms\net45\UserPassCred.cs" />
     <EmbeddedResource Include="Properties\Microsoft.Identity.Core.rd.xml" />
   </ItemGroup>
 
@@ -96,7 +97,7 @@
     <PackageReference Include="System.Runtime.Serialization.Json" Version="4.0.3" />
     <PackageReference Include="System.Xml.XDocument" Version="4.0.11" />
   </ItemGroup>
-  
+
   <ItemGroup Condition=" '$(TargetFramework)' == 'Xamarin.iOS10' ">
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -107,7 +108,7 @@
     <Reference Include="System.Runtime.Serialization" />
     <Compile Include="Platforms\iOS\**\*.cs" />
   </ItemGroup>
-  
+
   <ItemGroup Condition=" '$(TargetFramework)' == 'MonoAndroid8.1' ">
     <Reference Include="System" />
     <Reference Include="System.IdentityModel" />
