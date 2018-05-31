@@ -98,7 +98,7 @@ namespace Microsoft.Identity.Core.OAuth2
             {
                 if (method == HttpMethod.Post)
                 {
-                    response = await HttpRequest.SendPost(endpointUri, _headers, _bodyParameters, requestContext);
+                    response = await HttpRequest.SendPost(endpointUri, _headers, new FormUrlEncodedContent(_bodyParameters), requestContext);
                 }
                 else
                 {

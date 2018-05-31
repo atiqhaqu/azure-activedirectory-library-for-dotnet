@@ -47,9 +47,15 @@ namespace Microsoft.Identity.Core.Http
         public static async Task<HttpResponse> SendPost(Uri endpoint, Dictionary<string, string> headers,
             Dictionary<string, string> bodyParameters, RequestContext requestContext)
         {
+            return await SendPost(endpoint, headers, new FormUrlEncodedContent(bodyParameters), requestContext).ConfigureAwait(false);
+        }
+
+        public static async Task<HttpResponse> SendPost(Uri endpoint, Dictionary<string, string> headers,
+            HttpContent body, RequestContext requestContext)
+        {
             return
                 await
-                    ExecuteWithRetry(endpoint, headers, bodyParameters, HttpMethod.Post, requestContext)
+                    ExecuteWithRetry(endpoint, headers, body, HttpMethod.Post, requestContext)
                         .ConfigureAwait(false);
         }
 
@@ -75,7 +81,7 @@ namespace Microsoft.Identity.Core.Http
         }
 
         private static async Task<HttpResponse> ExecuteWithRetry(Uri endpoint, Dictionary<string, string> headers,
-            Dictionary<string, string> bodyParameters, HttpMethod method,
+            HttpContent body, HttpMethod method,
             RequestContext requestContext, bool retry = true)
         {
             Exception toThrow = null;
@@ -83,7 +89,7 @@ namespace Microsoft.Identity.Core.Http
             HttpResponse response = null;
             try
             {
-                response = await Execute(endpoint, headers, bodyParameters, method);
+                response = await Execute(endpoint, headers, body, method);
 
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
@@ -117,7 +123,7 @@ namespace Microsoft.Identity.Core.Http
                     requestContext.Logger.Info(msg);
                     requestContext.Logger.InfoPii(msg);
                     await Task.Delay(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
-                    return await ExecuteWithRetry(endpoint, headers, bodyParameters, method, requestContext, false);
+                    return await ExecuteWithRetry(endpoint, headers, body, method, requestContext, false);
                 }
 
                 const string message = "Request retry failed.";
@@ -136,7 +142,7 @@ namespace Microsoft.Identity.Core.Http
         }
 
         private static async Task<HttpResponse> Execute(Uri endpoint, Dictionary<string, string> headers,
-            Dictionary<string, string> bodyParameters, HttpMethod method)
+            HttpContent body, HttpMethod method)
         {
             HttpClient client = HttpClientFactory.GetHttpClient();
             client.DefaultRequestHeaders.Accept.Clear();
@@ -145,11 +151,7 @@ namespace Microsoft.Identity.Core.Http
             using (HttpRequestMessage requestMessage = CreateRequestMessage(endpoint, headers))
             {
                 requestMessage.Method = method;
-                if (bodyParameters != null)
-                {
-                    requestMessage.Content = new FormUrlEncodedContent(bodyParameters);
-                }
-
+                requestMessage.Content = body;
                 using (HttpResponseMessage responseMessage =
                     await client.SendAsync(requestMessage).ConfigureAwait(false))
                 {
