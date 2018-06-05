@@ -80,6 +80,22 @@ namespace Microsoft.Identity.Core.Http
             return requestMessage;
         }
 
+        private static async Task<HttpContent> CloneContent(HttpContent content)
+        {
+            var temp = new System.IO.MemoryStream();
+            await content.CopyToAsync(temp).ConfigureAwait(false);
+            temp.Position = 0;
+            var clone = new StreamContent(temp);
+            if (content.Headers != null)
+            {
+                foreach (var h in content.Headers)
+                {
+                    clone.Headers.Add(h.Key, h.Value);
+                }
+            }
+            return clone;
+        }
+
         private static async Task<HttpResponse> ExecuteWithRetry(Uri endpoint, Dictionary<string, string> headers,
             HttpContent body, HttpMethod method,
             RequestContext requestContext, bool retry = true)
@@ -89,7 +105,14 @@ namespace Microsoft.Identity.Core.Http
             HttpResponse response = null;
             try
             {
-                response = await Execute(endpoint, headers, body, method);
+                HttpContent content = null;
+                if(body != null)
+                {
+                    // Since HttpContent would be disposed by underlying client.SendAsync(),
+                    // we duplicate it so that we will have a copy in case we would need to retry
+                    content = await CloneContent(body).ConfigureAwait(false);
+                }
+                response = await Execute(endpoint, headers, content, method).ConfigureAwait(false);
 
                 if (response.StatusCode == HttpStatusCode.OK)
                 {
