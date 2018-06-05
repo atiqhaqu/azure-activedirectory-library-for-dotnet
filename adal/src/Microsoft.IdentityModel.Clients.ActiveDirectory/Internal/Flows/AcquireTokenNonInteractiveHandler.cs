@@ -31,7 +31,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.IdentityModel.Clients.ActiveDirectory.Internal.Instance;
 using Microsoft.IdentityModel.Clients.ActiveDirectory.Internal.OAuth2;
-using Microsoft.IdentityModel.Clients.ActiveDirectory.Internal.WsTrust;
+using Microsoft.Identity.Core.WsTrust;
 
 namespace Microsoft.IdentityModel.Clients.ActiveDirectory.Internal.Flows
 {
@@ -130,8 +130,7 @@ namespace Microsoft.IdentityModel.Clients.ActiveDirectory.Internal.Flows
                     WsTrustAddress wsTrustAddress = null;
                     try
                     {
-                        var _wsTrustAddress = await Microsoft.Identity.Core.WsTrust.MexParser.FetchWsTrustAddressFromMexAsync(userRealmResponse.FederationMetadataUrl, this.userCredential.UserAuthType, RequestContext).ConfigureAwait(false);
-                        wsTrustAddress = new WsTrustAddress() { Uri = _wsTrustAddress.Uri, Version = _wsTrustAddress.Version == Identity.Core.WsTrust.WsTrustVersion.WsTrust13 ? WsTrustVersion.WsTrust13 : WsTrustVersion.WsTrust2005 };
+                        wsTrustAddress = await MexParser.FetchWsTrustAddressFromMexAsync(userRealmResponse.FederationMetadataUrl, this.userCredential.UserAuthType, RequestContext).ConfigureAwait(false);
                         if(wsTrustAddress == null) {
                             if(this.userCredential.UserAuthType == Identity.Core.UserAuthType.IntegratedAuth)
                             {
