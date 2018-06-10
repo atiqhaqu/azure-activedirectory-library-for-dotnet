@@ -27,6 +27,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -73,6 +74,13 @@ namespace Microsoft.Identity.Core.WsTrust
         {
             var httpResponse = await HttpRequest.SendGet( // It would potentially throw MsalServiceException
                 new UriBuilder(federationMetadataUrl).Uri, null, requestContext).ConfigureAwait(false);
+            if (httpResponse.StatusCode != System.Net.HttpStatusCode.OK) {
+                throw new Client.MsalException(
+                    MsalErrorMessage.AccessingMetadataDocumentFailed,
+                    string.Format(CultureInfo.CurrentCulture,
+                        "Response status code does not indicate success: {0} ({1}).",
+                        (int)httpResponse.StatusCode, httpResponse.StatusCode));
+            }
             return XDocument.Parse(httpResponse.Body, LoadOptions.None);
         }
 
