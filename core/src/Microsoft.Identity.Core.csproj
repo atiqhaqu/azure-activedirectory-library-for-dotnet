@@ -124,4 +124,7 @@
       <Version>27.0.2</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Realm\" />
+  </ItemGroup>
 </Project>
