@@ -150,14 +150,31 @@ namespace Microsoft.IdentityModel.Clients.ActiveDirectory.Internal.Flows
                     {
                         throw new AdalException(AdalError.ParsingWsMetadataExchangeFailed, ex);
                     }
-                    catch (Identity.Client.MsalServiceException ex)
+                    catch (Identity.Client.MsalException ex)
                     {
-                        throw new AdalServiceException(AdalError.AccessingWsMetadataExchangeFailed, ex);
+                        throw new AdalException(AdalError.AccessingWsMetadataExchangeFailed, ex);
                     }
                     RequestContext.Logger.InfoPii(string.Format(CultureInfo.CurrentCulture, " WS-Trust endpoint '{0}' fetched from MEX at '{1}'",
                             wsTrustAddress.Uri, userRealmResponse.FederationMetadataUrl));
 
-                    WsTrustResponse wsTrustResponse = await WsTrustRequest.SendRequestAsync(wsTrustAddress, this.userCredential, RequestContext, userRealmResponse.CloudAudienceUrn).ConfigureAwait(false);
+                    WsTrustResponse wsTrustResponse;
+                    try
+                    {
+                        wsTrustResponse = await WsTrustRequest.SendRequestAsync(wsTrustAddress, this.userCredential, RequestContext, userRealmResponse.CloudAudienceUrn).ConfigureAwait(false);
+                    }
+                    catch (System.Xml.XmlException ex)
+                    {
+                        throw new AdalException(AdalError.ParsingWsTrustResponseFailed, ex);
+                    }
+                    catch (Identity.Client.MsalServiceException ex)
+                    {
+                        throw new AdalException(AdalError.ParsingWsTrustResponseFailed, ex.Message, ex);
+                    }
+                    if (wsTrustResponse == null)
+                    {
+                        throw new AdalException(AdalError.ParsingWsTrustResponseFailed);
+                    }
+
 
                     var msg = string.Format(CultureInfo.CurrentCulture,
                         " Token of type '{0}' acquired from WS-Trust endpoint", wsTrustResponse.TokenType);

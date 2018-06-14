@@ -31,6 +31,7 @@ using System.Globalization;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Microsoft.Identity.Core.Helpers;
 using Microsoft.Identity.Core.Http;
 
@@ -78,32 +79,23 @@ namespace Microsoft.Identity.Core.WsTrust
                 BuildMessage(string.IsNullOrEmpty(cloudAudience) ? defaultAppliesTo : cloudAudience, wsTrustAddress, credential).ToString(),
                 Encoding.UTF8, headers["ContentType"]);
             var resp = await HttpRequest.SendPost(wsTrustAddress.Uri, headers, body, requestContext).ConfigureAwait(false);
-            return WsTrustResponse.CreateFromResponse(resp.Body, wsTrustAddress.Version);
-            /*
-            catch (HttpRequestWrapperException ex)
+            if (resp.StatusCode != System.Net.HttpStatusCode.OK)
             {
-                string errorMessage;
-
+                string errorMessage = null;
                 try
                 {
-                    using (Stream stream = EncodingHelper.GenerateStreamFromString(ex.WebResponse.ResponseString))
-                    {
-                        XDocument responseDocument = WsTrustResponse.ReadDocumentFromResponse(stream);
-                        errorMessage = WsTrustResponse.ReadErrorResponse(responseDocument, requestContext);
-                    }
+                    errorMessage = WsTrustResponse.ReadErrorResponse(XDocument.Parse(resp.Body, LoadOptions.None), requestContext);
                 }
-                catch (AdalException)
+                catch (System.Xml.XmlException)
                 {
-                    errorMessage = "See inner exception for detail.";
+                    errorMessage = resp.Body;
                 }
-
-                throw new AdalServiceException(
-                    AdalError.FederatedServiceReturnedError,
-                    string.Format(CultureInfo.CurrentCulture, AdalErrorMessage.FederatedServiceReturnedErrorTemplate, wsTrustAddress.Uri, errorMessage),
-                    null,
-                    ex);
+                throw new Client.MsalServiceException(
+                    "federated_service_returned_error",
+                    string.Format(CultureInfo.CurrentCulture, MsalErrorMessage.FederatedServiceReturnedErrorTemplate, wsTrustAddress.Uri, errorMessage)
+                );
             }
-            */
+            return WsTrustResponse.CreateFromResponse(resp.Body, wsTrustAddress.Version);
         }
 
         public static StringBuilder BuildMessage(string appliesTo, WsTrustAddress wsTrustAddress,
