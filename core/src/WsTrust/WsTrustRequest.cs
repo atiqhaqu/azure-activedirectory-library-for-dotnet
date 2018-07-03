@@ -91,7 +91,7 @@ namespace Microsoft.Identity.Core.WsTrust
                     errorMessage = resp.Body;
                 }
                 throw new Client.MsalServiceException(
-                    "federated_service_returned_error",
+                    MsalError.FederatedServiceReturnedError,
                     string.Format(CultureInfo.CurrentCulture, MsalErrorMessage.FederatedServiceReturnedErrorTemplate, wsTrustAddress.Uri, errorMessage)
                 );
             }

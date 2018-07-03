@@ -108,6 +108,11 @@ namespace Microsoft.Identity.Core
         public const string ParsingWsMetadataExchangeFailed = "parsing_ws_metadata_exchange_failed";
 
         /// <summary>
+        /// Federated service returned error.
+        /// </summary>
+        public const string FederatedServiceReturnedError = "federated_service_returned_error";
+
+        /// <summary>
         /// WS-Trust Endpoint Not Found in Metadata Document.
         /// </summary>
         public const string WsTrustEndpointNotFoundInMetadataDocument = "wstrust_endpoint_not_found";
