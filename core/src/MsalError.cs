@@ -103,6 +103,11 @@ namespace Microsoft.Identity.Core
         public const string MissingFederationMetadataUrl = "missing_federation_metadata_url";
 
         /// <summary>
+        /// Accessing WS Metadata Exchange Failed.
+        /// </summary>
+        public const string AccessingWsMetadataExchangeFailed = "accessing_ws_metadata_exchange_failed";
+
+        /// <summary>
         /// Parsing WS Metadata Exchange Failed.
         /// </summary>
         public const string ParsingWsMetadataExchangeFailed = "parsing_ws_metadata_exchange_failed";

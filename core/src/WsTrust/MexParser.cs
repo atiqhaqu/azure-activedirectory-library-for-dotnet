@@ -76,7 +76,7 @@ namespace Microsoft.Identity.Core.WsTrust
                 new UriBuilder(federationMetadataUrl).Uri, null, requestContext).ConfigureAwait(false);
             if (httpResponse.StatusCode != System.Net.HttpStatusCode.OK) {
                 throw new Client.MsalException(
-                    MsalErrorMessage.AccessingMetadataDocumentFailed,
+                    MsalError.AccessingWsMetadataExchangeFailed,
                     string.Format(CultureInfo.CurrentCulture,
                         "Response status code does not indicate success: {0} ({1}).",
                         (int)httpResponse.StatusCode, httpResponse.StatusCode));
