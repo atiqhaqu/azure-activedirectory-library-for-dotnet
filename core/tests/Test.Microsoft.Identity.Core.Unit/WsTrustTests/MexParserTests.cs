@@ -28,9 +28,16 @@
 using System.IO;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using System.Net.Http;
 using Microsoft.Identity.Core;
+using Microsoft.Identity.Client;
+using Microsoft.Identity.Core.Http;
 using Microsoft.Identity.Core.WsTrust;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Net;
+using Test.Microsoft.Identity.Unit.Mocks;
+using Test.Microsoft.Identity.Core.Unit;
+using System;
 
 namespace Test.Microsoft.Identity.Unit.WsTrustTests
 {
@@ -40,26 +47,76 @@ namespace Test.Microsoft.Identity.Unit.WsTrustTests
     {
         [TestMethod]
         [Description("WS-Trust Address Extraction Test")]
-        public async Task WsTrust2005AddressExtractionTest()
+        public void WsTrust2005AddressExtractionTest()
         {
-            await Task.Factory.StartNew(() =>
+            XDocument mexDocument = null;
+            using (Stream stream = new FileStream("TestMex2005.xml", FileMode.Open))
             {
-                XDocument mexDocument = null;
-                using (Stream stream = new FileStream("TestMex2005.xml", FileMode.Open))
+                mexDocument = XDocument.Load(stream);
+            }
+            Assert.IsNotNull(mexDocument);
+
+            WsTrustAddress wsTrustAddress;
+            wsTrustAddress = MexParser.ExtractWsTrustAddressFromMex(mexDocument, UserAuthType.IntegratedAuth, null);
+            Assert.AreEqual("https://sts.usystech.net/adfs/services/trust/2005/windowstransport", wsTrustAddress.Uri.AbsoluteUri);
+            Assert.AreEqual(wsTrustAddress.Version, WsTrustVersion.WsTrust2005);
+
+            wsTrustAddress = MexParser.ExtractWsTrustAddressFromMex(mexDocument, UserAuthType.UsernamePassword, null);
+            Assert.AreEqual("https://sts.usystech.net/adfs/services/trust/2005/usernamemixed", wsTrustAddress.Uri.AbsoluteUri);
+            Assert.AreEqual(wsTrustAddress.Version, WsTrustVersion.WsTrust2005);
+        }
+
+        [TestMethod]
+        [Description("Mex endpoint fails to resolve")]
+        public async Task MexEndpointFailsToResolveTestAsync()
+        {
+            HttpClientFactory.ReturnHttpClientForMocks = true;
+            HttpMessageHandlerFactory.ClearMockHandlers();
+            HttpMessageHandlerFactory.AddMockHandler(new MockHttpMessageHandler()
+            {
+                Method = HttpMethod.Get,
+                ResponseMessage = new HttpResponseMessage(HttpStatusCode.NotFound)
                 {
-                    mexDocument = XDocument.Load(stream);
+                    Content = new StringContent("Not found")
                 }
-                Assert.IsNotNull(mexDocument);
-
-                WsTrustAddress wsTrustAddress;
-                wsTrustAddress = MexParser.ExtractWsTrustAddressFromMex(mexDocument, UserAuthType.IntegratedAuth, null);
-                Assert.AreEqual("https://sts.usystech.net/adfs/services/trust/2005/windowstransport", wsTrustAddress.Uri.AbsoluteUri);
-                Assert.AreEqual(wsTrustAddress.Version, WsTrustVersion.WsTrust2005);
-
-                wsTrustAddress = MexParser.ExtractWsTrustAddressFromMex(mexDocument, UserAuthType.UsernamePassword, null);
-                Assert.AreEqual("https://sts.usystech.net/adfs/services/trust/2005/usernamemixed", wsTrustAddress.Uri.AbsoluteUri);
-                Assert.AreEqual(wsTrustAddress.Version, WsTrustVersion.WsTrust2005);
             });
+            var requestContext = new RequestContext(new TestLogger(Guid.NewGuid(), null));
+            try
+            {
+                await MexParser.FetchWsTrustAddressFromMexAsync("http://somehost", UserAuthType.IntegratedAuth, requestContext);
+                Assert.Fail("We expect an exception to be thrown here");
+            }
+            catch (MsalException ex)
+            {
+                Assert.AreEqual(MsalError.AccessingWsMetadataExchangeFailed, ex.ErrorCode);
+            }
+            Assert.IsTrue(HttpMessageHandlerFactory.IsMocksQueueEmpty, "All mocks should have been consumed");
+        }
+
+        [TestMethod]
+        [Description("Mex endpoint fails to parse")]
+        public async Task MexEndpointFailsToParseTestAsync()
+        {
+            HttpClientFactory.ReturnHttpClientForMocks = true;
+            HttpMessageHandlerFactory.ClearMockHandlers();
+            HttpMessageHandlerFactory.AddMockHandler(new MockHttpMessageHandler()
+            {
+                Method = HttpMethod.Get,
+                ResponseMessage = new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("malformed, non-xml content")
+                }
+            });
+            var requestContext = new RequestContext(new TestLogger(Guid.NewGuid(), null));
+            try
+            {
+                await MexParser.FetchWsTrustAddressFromMexAsync("http://somehost", UserAuthType.IntegratedAuth, requestContext);
+                Assert.Fail("We expect an exception to be thrown here");
+            }
+            catch (System.Xml.XmlException)
+            {
+            }
+            Assert.IsTrue(HttpMessageHandlerFactory.IsMocksQueueEmpty, "All mocks should have been consumed");
         }
     }
 }
