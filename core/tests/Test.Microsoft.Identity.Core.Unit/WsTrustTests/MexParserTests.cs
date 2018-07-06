@@ -35,7 +35,7 @@ using Microsoft.Identity.Core.Http;
 using Microsoft.Identity.Core.WsTrust;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Net;
-using Test.Microsoft.Identity.Unit.Mocks;
+using Test.Microsoft.Identity.Core.Unit.Mocks;
 using Test.Microsoft.Identity.Core.Unit;
 using System;
 

@@ -43,7 +43,7 @@ using Microsoft.Identity.Core.Http;
 using Microsoft.Identity.Core.WsTrust;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Test.Microsoft.Identity.Core.Unit;
-using Test.Microsoft.Identity.Unit.Mocks;
+using Test.Microsoft.Identity.Core.Unit.Mocks;
 
 namespace Test.Microsoft.Identity.Unit.WsTrustTests
 {
@@ -93,7 +93,7 @@ namespace Test.Microsoft.Identity.Unit.WsTrustTests
             Debug.WriteLine(string.Join("\r\n", validationIssues.ToArray()));
 
             // Filter out "expected" schema-validation messages.
-            // The real ws-trust XML namespace is http://docs.oasis-open.org/ws-sx/ws-trust/200512/ i.e. with a trailing slash. However, we use 
+            // The real ws-trust XML namespace is http://docs.oasis-open.org/ws-sx/ws-trust/200512/ i.e. with a trailing slash. However, we use
             // the namespace without a trailing slash as this is what the server expects, so we expect validation messages about missing elements
             const string invalidTrustNamespaceMessageContent = "Could not find schema information for the element 'http://docs.oasis-open.org/ws-sx/ws-trust/200512:";
             List<string> unexpectedValidationIssues = validationIssues.Where(i => !i.Contains(invalidTrustNamespaceMessageContent)).ToList();
